@@ -6,7 +6,7 @@ target/
 
 ### Database folder ###
 data/
-data/** 
+/data/
 
 ### STS ###
 .apt_generated
