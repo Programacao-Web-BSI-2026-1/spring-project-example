@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:th="http://www.thymeleaf.org">
+
+<!-- This is a base layout template for Thymeleaf. -->
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{app.title}">App Placeholder</title>
+    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+</head>
+
+
+<body>
+ 
+
+ <footer th:fragment="footer">
+    <small>&copy; 2026 Web Project. All rights reserved.</small>
+    <small th:text="#{app.contact}">Contact Placeholder</small>
+ </footer>
+
+</body>
+</html>

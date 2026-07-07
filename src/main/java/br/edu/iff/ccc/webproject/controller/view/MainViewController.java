@@ -21,9 +21,11 @@ public class MainViewController {
      
     // http://localhost:8080/inicial/1?param=valor 
     @GetMapping("/{id}")
-    public String getExemploParametros(@PathVariable("id") String id, @RequestParam String param, Model model) {
+    public String getExemploParametros(@PathVariable("id") String id, @RequestParam("param") String param, Model model) {
         model.addAttribute("id", id);
-        model.addAttribute("param", param);
+        model.addAttribute("var1", param);
+        System.out.println("ID: " + id);
+        System.out.println("Param: " + param);
         return "inicial.html";
     }
     

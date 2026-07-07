@@ -2,16 +2,29 @@
 <html lang="pt-br"
     xmlns="http://www.w3.org/1999/xhtml"
     xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exemplo HTML Spring</title>
-    <link rel="stylesheet" th:href="@{/css/estilo.css}">
+
+<!--Exemplo de uso Fragmentos 
+   OBS : Para usar o th:replace, é necessário que o fragmento esteja em um arquivo separado ou em um fragmento definido no mesmo arquivo.
+   Neste caso, estamos usando o fragmento "head" definido no arquivo baseLayout.html.
+-->
+<head th:replace="baseLayout :: head">
 </head>
+
 <body>
-    <h1>Exemplo HTML Spring</h1>
-    <p>Este é um exemplo de página HTML servida por um controlador Spring.</p>
+
+    
+    <h1 th:text="#{app.title}">Placeholder Titulo</h1>
+    <p th:text="#{app.description}">Placeholder Descrição</p>
+    <hr>
+    <h2>ID: <span th:text="${id}">ID Placeholder</span></h2>
+    <p>Parametros do Request:</p>
+    <ul>
+        <li>Parametro: <span th:text="${var1}">Parametro Placeholder</span></li>
+    </ul> 
     
     
+    <!--Exemplo de uso Fragmentos-->
+    <footer th:replace="~{baseLayout :: footer}"></footer>    
+
 </body>
 </html>
