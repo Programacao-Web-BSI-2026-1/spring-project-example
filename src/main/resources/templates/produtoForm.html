@@ -1,1 +1,31 @@
-.
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastrar Produto</title>
+</head>
+<body>
+
+    <h1>Novo Produto</h1>
+
+    <!-- O formulário aponta para /produto via POST, e mapeia o DTO 'produto' -->
+    <form th:action="@{/produto}" th:object="${produto}" method="POST">
+        
+        <div>
+            <label for="nome">Nome do Produto:</label>
+            <!-- th:field mapeia para a propriedade 'nome' do ProdutoRequest -->
+            <input type="text" id="nome" th:field="*{nome}" required />
+        </div>
+
+        <div>
+            <label for="descricao">Descrição:</label>
+            <!-- th:field mapeia para a propriedade 'descricao' do ProdutoRequest -->
+            <input type="text" id="descricao" th:field="*{descricao}" required />
+        </div>
+
+        <button type="submit">Salvar Produto</button>
+        
+    </form>
+
+</body>
+</html>

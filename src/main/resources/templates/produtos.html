@@ -1,1 +1,35 @@
-.
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Produtos</title>
+</head>
+<body>
+
+    <h1>Produtos Cadastrados</h1>
+    
+    <a href="/produto/novo">Cadastrar Novo Produto</a>
+
+    <table border="1" style="margin-top: 20px; width: 50%; text-align: left;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Descrição</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Itera sobre a lista de entidades Produto enviada pelo Controller -->
+            <tr th:each="prod : ${produtos}">
+                <td th:text="${prod.id}">UUID</td>
+                <td th:text="${prod.nome}">Nome do Produto</td>
+                <td th:text="${prod.descricao}">Descrição breve</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(produtos)}">
+                <td colspan="3" style="text-align: center;">Nenhum produto cadastrado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
