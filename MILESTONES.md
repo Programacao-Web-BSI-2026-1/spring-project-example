@@ -54,3 +54,38 @@ Implementar a estrutura completa da camada de Controller da aplicação, ou seja
 Implementar o fluxo de ponta a ponta para uma entidade da aplicação, garantindo a correta separação de responsabilidades. Esta etapa exige interligar a camada de Interface (Controllers recebendo DTOs e renderizando formulários/listas com Thymeleaf), a camada de Aplicação (Use Cases isolando as regras de negócio e geração de identificadores) e a camada de Dados (Repositórios gerenciados pelo Spring gerindo o estado em memória). 
 
 Ao final desta milestone, a funcionalidade de cadastro e listagem deve estar operando de forma integrada, com a injeção de dependências adequadamente configurada utilizando as anotações `@Service` e `@Repository`.
+
+
+---
+
+## 🚩 Milestone 5: Persistência com Spring Data JPA e Testes
+**Prazo para entrega:** 28/08/2026
+**Padrão de Nomeação do Pull Request:** TR05-PersistenciaJPA
+**Padrão da Branch:** TR05-persistencia
+
+**Objetivo:** 
+Evoluir a aplicação substituindo o repositório em memória por um banco de dados real (H2) utilizando o Spring Data JPA. O sistema deve mapear as entidades e garantir a integridade dos dados através de restrições no banco de dados (DDL via Hibernate). Por fim, a nova camada de repositório deve ter seu funcionamento garantido através de testes automatizados.
+
+### 📋 Requisitos Obrigatórios da Entrega:
+
+1. **Configuração do Banco de Dados (H2):**
+   * Configurar corretamente o arquivo application.properties para conectar ao banco em memória H2.
+   * Habilitar o console do H2 e o log de comandos SQL (spring.jpa.show-sql=true).
+
+2. **Mapeamento Objeto-Relacional (JPA):**
+   * Transformar as classes de domínio em tabelas utilizando a anotação @Entity.
+   * Configurar a geração automática de chaves primárias (@Id e @GeneratedValue).
+   * Adicionar restrições de banco de dados mapeadas nas colunas (ex: @Column(nullable = false, unique = true)).
+
+3. **Repositórios e Use Cases:**
+   * Criar as interfaces de repositório estendendo JpaRepository (eliminando as antigas classes com listas estáticas).
+   * Refatorar a camada de Service/UseCase para utilizar os métodos fornecidos pelo Spring Data (save, findAll, findById, deleteById).
+
+4. **Testes Automatizados:**
+   * Criar uma classe de testes para o Repositório utilizando a anotação @DataJpaTest.
+   * Implementar testes automatizados (JUnit) que verifiquem: a gravação com sucesso no banco, a busca por ID, e o lançamento de exceções ao violar as restrições da entidade (ex: tentar salvar um registro com nome duplicado).
+
+### 📝 Padrão de Entrega:
+O código deve ser desenvolvido na branch TR05-persistencia.
+A entrega é feita através da abertura de um **Pull Request** para a branch main.
+O código deve compilar sem erros, o fluxo MVC (telas) deve continuar funcionando normalmente e todos os testes automatizados devem estar passando (cor verde no JUnit).

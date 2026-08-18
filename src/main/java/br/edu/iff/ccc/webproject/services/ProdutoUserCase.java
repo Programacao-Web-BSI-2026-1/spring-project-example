@@ -21,11 +21,11 @@ public class ProdutoUserCase {
     public void criarProduto(ProdutoRequest produto) {
         UUID id = UUID.randomUUID();
         Produto novoProduto = new Produto(id, produto.getNome(), produto.getDescricao());
-        this.produtoRepositorio.salvar(novoProduto);
+        this.produtoRepositorio.save(novoProduto);
     } 
 
     public List<Produto> listarProdutos() {
-        return this.produtoRepositorio.listarTodos();
+        return this.produtoRepositorio.findAll();
     }
 
     public void atualizarProduto() {
