@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Prático Interativo: JPA, H2 & Testes Automatizados</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        <!-- Chosen Palette: Warm Neutral Slate & Amber -->
+        /* Custom Chart Container Rules */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 320px;
+            }
+        }
+        /* Custom scrollbar for code blocks */
+        pre::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🗄️</span>
+                <div>
+                    <h1 class="text-lg font-bold text-amber-400 leading-tight">Spring Data JPA & Testes</h1>
+                    <p class="text-xs text-slate-400">Guia Prático e Interativo de Persistência em Java</p>
+                </div>
+            </div>
+            
+            <nav class="flex flex-wrap gap-2 text-xs sm:text-sm font-medium">
+                <button onclick="switchTab('h2')" id="tab-h2" class="nav-btn px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-semibold shadow transition">1. H2 DB</button>
+                <button onclick="switchTab('jpa')" id="tab-jpa" class="nav-btn px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">2. Mapeamento JPA</button>
+                <button onclick="switchTab('repository')" id="tab-repository" class="nav-btn px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">3. JpaRepository</button>
+                <button onclick="switchTab('tests')" id="tab-tests" class="nav-btn px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">4. Testes @DataJpaTest</button>
+                <button onclick="switchTab('simulator')" id="tab-simulator" class="nav-btn px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">5. Simulador de Fluxo</button>
+                <button onclick="switchTab('checklist')" id="tab-checklist" class="nav-btn px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">6. Checklist TR05</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+
+        <!-- ================= SECTION 1: H2 DATABASE ================= -->
+        <section id="sec-h2" class="space-y-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <span>⚙️</span> 1. Configurando o Banco de Dados Relacional (H2)
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    O <strong>H2 Database</strong> é um banco relacional em memória extremamente leve. Ele substitui coleções voláteis como <code>ArrayList</code> sem exigir a instalação de um SGBD pesado (como PostgreSQL ou MySQL) no ambiente de desenvolvimento.
+                </p>
+            </div>
+
+            <!-- Interactive Properties Explorer -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Properties Configurator Controls -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+                        <span>📝</span> Parâmetros do <code>application.properties</code>
+                    </h3>
+                    <p class="text-xs text-slate-500">Ative ou desative as chaves para entender a função de cada propriedade no Spring Boot:</p>
+
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" id="prop-url" checked onchange="updatePropertiesView()" class="mt-1 rounded text-amber-500 focus:ring-amber-400">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-slate-800">spring.datasource.url</span>
+                                <p class="text-xs text-slate-500">Define o nome e tipo do banco em memória (ex: <code>jdbc:h2:mem:testdb</code>).</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" id="prop-ddl" checked onchange="updatePropertiesView()" class="mt-1 rounded text-amber-500 focus:ring-amber-400">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-slate-800">spring.jpa.hibernate.ddl-auto</span>
+                                <p class="text-xs text-slate-500">Gera e atualiza automaticamente as tabelas baseadas nas classes <code>@Entity</code> (<code>update</code>).</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" id="prop-sql" checked onchange="updatePropertiesView()" class="mt-1 rounded text-amber-500 focus:ring-amber-400">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-slate-800">spring.jpa.show-sql</span>
+                                <p class="text-xs text-slate-500">Imprime os comandos SQL executados (INSERT, SELECT, DELETE) no console.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                            <input type="checkbox" id="prop-console" checked onchange="updatePropertiesView()" class="mt-1 rounded text-amber-500 focus:ring-amber-400">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-slate-800">spring.h2.console.enabled</span>
+                                <p class="text-xs text-slate-500">Habilita a interface gráfica web em <code>http://localhost:8080/h2-console</code>.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Live Generated Properties File -->
+                <div class="lg:col-span-7 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                            <span class="text-xs font-mono text-slate-400">src/main/resources/application.properties</span>
+                            <span class="text-xs bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/20 font-semibold">Live Preview</span>
+                        </div>
+                        <pre id="code-properties" class="font-mono text-xs text-emerald-400 overflow-x-auto leading-relaxed"></pre>
+                    </div>
+
+                    <!-- Simulated H2 Console Badge -->
+                    <div id="h2-console-sim" class="mt-6 p-4 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white flex items-center gap-1.5">
+                                <span>🌐</span> Acesso ao Console do Banco:
+                            </span>
+                            <span class="font-mono text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">http://localhost:8080/h2-console</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-700">
+                            <div>JDBC URL: <span class="text-slate-200">jdbc:h2:mem:testdb</span></div>
+                            <div>User Name: <span class="text-slate-200">sa</span></div>
+                            <div>Password: <span class="text-slate-200">password</span></div>
+                            <div>Driver: <span class="text-slate-200">org.h2.Driver</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: JPA MAPPING ================= -->
+        <section id="sec-jpa" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <span>🏷️</span> 2. Mapeamento Objeto-Relacional com Anotações JPA
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    A JPA (<em>Jakarta Persistence API</em>) ensina ao Spring Boot como traduzir uma classe Java (Atributos e Tipos) em uma tabela de banco de dados relacional (Colunas, Chaves Primárias e Restrições DDL).
+                </p>
+            </div>
+
+            <!-- Interactive Annotation Inspector -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Java Entity Code View -->
+                <div class="lg:col-span-6 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-md">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                        <span class="text-xs font-mono text-slate-400">br.edu.iff.ccc.entities.Produto.java</span>
+                        <span class="text-xs text-amber-400">Clique nas linhas destacadas 💡</span>
+                    </div>
+                    <pre class="font-mono text-xs text-slate-300 leading-relaxed overflow-x-auto">
+<span onclick="inspectAnnotation('entity')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block">@Entity</span>
+<span onclick="inspectAnnotation('table')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block">@Table(name = "tb_produto")</span>
+<span class="text-purple-400">public class</span> <span class="text-yellow-300">Produto</span> {
+
+    <span onclick="inspectAnnotation('id')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block">@Id</span>
+    <span onclick="inspectAnnotation('generated')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block">@GeneratedValue(strategy = GenerationType.UUID)</span>
+    <span class="text-purple-400">private</span> UUID id;
+
+    <span onclick="inspectAnnotation('col-nome')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block">@Column(name = "nm_produto", nullable = false, unique = true, length = 100)</span>
+    <span class="text-purple-400">private</span> String nome;
+
+    <span onclick="inspectAnnotation('col-desc')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block">@Column(name = "ds_descricao", nullable = false)</span>
+    <span class="text-purple-400">private</span> String descricao;
+
+    <span onclick="inspectAnnotation('constructor')" class="cursor-pointer hover:bg-slate-800 p-0.5 rounded text-amber-400 font-bold block text-slate-500">// ⚠️ Construtor vazio OBRIGATÓRIO do JPA</span>
+    <span class="text-purple-400">public</span> <span class="text-yellow-300">Produto</span>() {}
+
+    <span class="text-purple-400">public</span> <span class="text-yellow-300">Produto</span>(String nome, String descricao) {
+        <span class="text-purple-400">this</span>.nome = nome;
+        <span class="text-purple-400">this</span>.descricao = descricao;
+    }
+}</pre>
+                </div>
+
+                <!-- Explanation & Generated DDL SQL Card -->
+                <div class="lg:col-span-6 space-y-4">
+                    <div class="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm">
+                        <div class="flex items-center gap-2 text-amber-900 font-bold text-sm mb-2">
+                            <span>🔍</span> <span id="annotation-title">Selecione uma anotação ao lado</span>
+                        </div>
+                        <p id="annotation-desc" class="text-xs text-amber-800 leading-relaxed">
+                            Clique em qualquer anotação anotada em amarelo no código Java para inspecionar o seu efeito na criação da tabela no banco de dados H2.
+                        </p>
+                    </div>
+
+                    <!-- SQL DDL Translation -->
+                    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-md">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                            <span class="text-xs font-mono text-slate-400">SQL DDL Gerado Automático (Hibernate)</span>
+                            <span class="text-xs text-emerald-400 font-mono">CREATE TABLE</span>
+                        </div>
+                        <pre id="ddl-output" class="font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto">
+CREATE TABLE tb_produto (
+    id UUID NOT NULL,
+    nm_produto VARCHAR(100) NOT NULL UNIQUE,
+    ds_descricao VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id)
+);</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: JPA REPOSITORY ================= -->
+        <section id="sec-repository" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <span>⚡</span> 3. A Mágica do Spring Data JPA (`JpaRepository`)
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Com o Spring Data JPA, **eliminamos centenas de linhas de código manual** de repositório. Em vez de implementar listas estáticas ou escrever SQL puro, apenas declaramos uma <code>Interface</code> estendendo <code>JpaRepository</code>.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Comparison Chart & Code Reduction Metric -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2 border-b pb-2">
+                        <span>📊</span> Comparativo: Linhas de Código Necessárias
+                    </h3>
+                    
+                    <div class="chart-container">
+                        <canvas id="codeReductionChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-500 text-center">
+                        O Spring gera a implementação da classe dinamicamente em tempo de execução!
+                    </p>
+                </div>
+
+                <!-- Interactive Method Execution Playground -->
+                <div class="lg:col-span-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2 border-b pb-2">
+                        <span>🎮</span> Playground de Métodos Nativos do `JpaRepository`
+                    </h3>
+                    <p class="text-xs text-slate-500">Clique em um método oferecido gratuitamente pela interface:</p>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="playRepoMethod('save')" class="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-lg text-left transition">
+                            <div class="font-mono text-xs font-bold text-slate-900">.save(entity)</div>
+                            <div class="text-[11px] text-slate-500">Realiza INSERT / UPDATE</div>
+                        </button>
+                        <button onclick="playRepoMethod('findAll')" class="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-lg text-left transition">
+                            <div class="font-mono text-xs font-bold text-slate-900">.findAll()</div>
+                            <div class="text-[11px] text-slate-500">Retorna List&lt;Produto&gt;</div>
+                        </button>
+                        <button onclick="playRepoMethod('findById')" class="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-lg text-left transition">
+                            <div class="font-mono text-xs font-bold text-slate-900">.findById(id)</div>
+                            <div class="text-[11px] text-slate-500">Retorna Optional&lt;Produto&gt;</div>
+                        </button>
+                        <button onclick="playRepoMethod('deleteById')" class="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-lg text-left transition">
+                            <div class="font-mono text-xs font-bold text-slate-900">.deleteById(id)</div>
+                            <div class="text-[11px] text-slate-500">Executa DELETE no SQL</div>
+                        </button>
+                    </div>
+
+                    <!-- Execution Console Output -->
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-800 text-xs font-mono space-y-2 mt-4">
+                        <div class="text-slate-400 border-b border-slate-800 pb-1">Resultado do Comando:</div>
+                        <div id="repo-method-code" class="text-amber-400 font-bold">java: repository.save(produto);</div>
+                        <div id="repo-method-sql" class="text-emerald-400">SQL: INSERT INTO tb_produto (nm_produto, ds_descricao, id) VALUES (?, ?, ?);</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: AUTOMATED TESTS ================= -->
+        <section id="sec-tests" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <span>🧪</span> 4. Testes Automatizados com `@DataJpaTest`
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    A anotação <code>@DataJpaTest</code> sobe um contexto super leve contendo apenas o banco H2 e as entidades JPA. Cada método de teste é isolado e executa um <strong>Rollback automático</strong> ao final, garantindo que o banco não fique desorganizado para os próximos testes.
+                </p>
+            </div>
+
+            <!-- Interactive Test Suite Simulator -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Test Runner Controls & List -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="font-bold text-slate-900 text-sm">Suíte de Testes do Repositório</h3>
+                        <button onclick="runAllTests()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1">
+                            <span>▶️</span> Executar JUnit
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div id="test-card-1" class="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-1">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span class="text-slate-800">deveSalvarProdutoEGerarId()</span>
+                                <span id="test-status-1" class="px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-600">PENDENTE</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500">Verifica se o UUID é gerado e retornado com sucesso.</p>
+                        </div>
+
+                        <div id="test-card-2" class="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-1">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span class="text-slate-800">deveLancarExcecaoQuandoNomeDuplicado()</span>
+                                <span id="test-status-2" class="px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-600">PENDENTE</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500">Verifica se <code>unique = true</code> lança <code>DataIntegrityViolationException</code>.</p>
+                        </div>
+                    </div>
+
+                    <!-- Flow Diagram of @DataJpaTest Lifecycle -->
+                    <div class="p-4 bg-slate-100 rounded-lg border border-slate-200 text-xs space-y-2">
+                        <span class="font-bold text-slate-800 block">🔄 Ciclo de Vida de cada Teste:</span>
+                        <div class="flex items-center justify-between text-[11px] text-slate-600 font-mono">
+                            <span>Sobe H2</span> ➔ <span>Arrange</span> ➔ <span>Act</span> ➔ <span>Assert</span> ➔ <span class="text-amber-700 font-bold">Rollback</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JUnit Log & Code Display -->
+                <div class="lg:col-span-7 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                            <span class="text-xs font-mono text-slate-400">ProdutoRepositoryTest.java (Console JUnit)</span>
+                            <span id="junit-timer" class="text-xs font-mono text-amber-400">Tempo: 0ms</span>
+                        </div>
+
+                        <pre id="test-execution-log" class="font-mono text-xs text-slate-300 leading-relaxed overflow-x-auto h-64">
+[INFO] Clique em "Executar JUnit" para rodar a bateria de testes automatizados...
+                        </pre>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span>Testes Passados: <strong id="passed-count" class="text-emerald-400">0</strong> / 2</span>
+                        <span class="text-slate-500">Framework: JUnit 5 + Spring Boot Starter Test</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 5: LIVE SIMULATION ================= -->
+        <section id="sec-simulator" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <span>🚀</span> 5. Simulador Interativo do Fluxo de Dados Completo
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Experimente cadastrar um produto no formulário interativo abaixo e acompanhe a requisição trafegando em tempo real por todas as camadas da aplicação até chegar à tabela do Banco de Dados H2.
+                </p>
+            </div>
+
+            <!-- Simulator Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- User Form Input -->
+                <div class="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-900 text-sm border-b pb-2 flex items-center gap-2">
+                        <span>📥</span> Entrada de Dados (Formulário)
+                    </h3>
+
+                    <form id="sim-form" onsubmit="runDataSimulation(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Produto (nm_produto):</label>
+                            <input type="text" id="sim-nome" required placeholder="Ex: Teclado Mecânico" class="w-full px-3 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none">
+                            <span class="text-[10px] text-slate-400 block mt-0.5">Restrição: Único (Não duplicado)</span>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Descrição (ds_descricao):</label>
+                            <input type="text" id="sim-desc" required placeholder="Ex: Switch Blue RGB" class="w-full px-3 py-2 border rounded-lg text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none">
+                        </div>
+
+                        <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition">
+                            Cadastrar no Banco H2 ⚡
+                        </button>
+                    </form>
+
+                    <div id="sim-feedback" class="p-3 rounded-lg text-xs hidden font-medium"></div>
+                </div>
+
+                <!-- Layer Pipeline Visualizer -->
+                <div class="lg:col-span-8 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-md space-y-4 text-white">
+                    <h3 class="font-bold text-amber-400 text-sm border-b border-slate-800 pb-2">
+                        Pipeline de Execução por Camada
+                    </h3>
+
+                    <div class="grid grid-cols-4 gap-2 text-center text-[11px] font-mono">
+                        <div id="pipe-controller" class="p-2 rounded bg-slate-800 border border-slate-700 text-slate-400">
+                            1. Controller
+                        </div>
+                        <div id="pipe-usecase" class="p-2 rounded bg-slate-800 border border-slate-700 text-slate-400">
+                            2. UseCase / Service
+                        </div>
+                        <div id="pipe-repository" class="p-2 rounded bg-slate-800 border border-slate-700 text-slate-400">
+                            3. JpaRepository
+                        </div>
+                        <div id="pipe-db" class="p-2 rounded bg-slate-800 border border-slate-700 text-slate-400">
+                            4. Banco H2
+                        </div>
+                    </div>
+
+                    <!-- Live Simulated Database Table View -->
+                    <div class="pt-2">
+                        <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
+                            <span>Tabela no H2: <code class="text-amber-400">tb_produto</code></span>
+                            <span id="db-count" class="text-emerald-400">0 registro(s)</span>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-800 rounded-lg">
+                            <table class="w-full text-left font-mono text-xs">
+                                <thead class="bg-slate-800 text-slate-300">
+                                    <tr>
+                                        <th class="p-2.5 border-b border-slate-700">id (UUID)</th>
+                                        <th class="p-2.5 border-b border-slate-700">nm_produto</th>
+                                        <th class="p-2.5 border-b border-slate-700">ds_descricao</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sim-db-rows" class="divide-y divide-slate-800 text-slate-300">
+                                    <tr>
+                                        <td colspan="3" class="p-4 text-center text-slate-500 italic">
+                                            Nenhum registro no banco em memória. Cadastre um produto ao lado!
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 6: CHECKLIST TR05 ================= -->
+        <section id="sec-checklist" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <span>📌</span> 6. Checklist de Acompanhamento da Entrega (TR05)
+                </h2>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Acompanhe o seu progresso pessoal para a entrega do Pull Request até o dia <strong>28/08/2026</strong> na branch <code>feature/TR05-persistencia</code>.
+                </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <span class="text-sm font-bold text-slate-900">Progresso dos Requisitos Requeridos:</span>
+                    <span id="checklist-progress" class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">0% Concluído</span>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" onchange="calcProgress()" class="chk-item mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">1. Configuração do H2 no <code>application.properties</code></span>
+                            <span class="text-xs text-slate-500">Parâmetros de conexão, driver, DDL auto, e ativação do console web do H2 configurados.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" onchange="calcProgress()" class="chk-item mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">2. Mapeamento JPA nas Entidades (`@Entity`, `@Column`)</span>
+                            <span class="text-xs text-slate-500">Anotações configuradas com restrições DDL (ex: <code>nullable = false</code>, <code>unique = true</code>, UUID).</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" onchange="calcProgress()" class="chk-item mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">3. Interface `JpaRepository` e Refatoração do Service</span>
+                            <span class="text-xs text-slate-500">Antigas classes de repositório em memória substituídas pelas interfaces e métodos nativos do Spring Data.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" onchange="calcProgress()" class="chk-item mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">4. Testes Automatizados de Repositório (`@DataJpaTest`)</span>
+                            <span class="text-xs text-slate-500">Testes unitários cobrindo inserção com geração de UUID, busca por ID e validação de exceções de integridade.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" onchange="calcProgress()" class="chk-item mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">5. Git & Pull Request (Branch `feature/TR05-persistencia`)</span>
+                            <span class="text-xs text-slate-500">Branch criada, commits organizados, PR aberto para a <code>main</code> e vinculado à Issue correspondente.</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-6 text-xs text-center">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>Material Didático para Apoio às Aulas de Desenvolvimento Web Backend • Spring Boot & JPA</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Navigation Logic ---
+        function switchTab(tabKey) {
+            const tabs = ['h2', 'jpa', 'repository', 'tests', 'simulator', 'checklist'];
+            tabs.forEach(key => {
+                const sec = document.getElementById(`sec-${key}`);
+                const btn = document.getElementById(`tab-${key}`);
+                if (key === tabKey) {
+                    sec.classList.remove('hidden');
+                    btn.classList.add('bg-amber-500', 'text-slate-950', 'font-semibold', 'shadow');
+                    btn.classList.remove('bg-slate-800', 'text-slate-300');
+                } else {
+                    sec.classList.add('hidden');
+                    btn.classList.remove('bg-amber-500', 'text-slate-950', 'font-semibold', 'shadow');
+                    btn.classList.add('bg-slate-800', 'text-slate-300');
+                }
+            });
+        }
+
+        // --- Section 1: Application Properties View ---
+        function updatePropertiesView() {
+            const url = document.getElementById('prop-url').checked;
+            const ddl = document.getElementById('prop-ddl').checked;
+            const sql = document.getElementById('prop-sql').checked;
+            const consoleEnabled = document.getElementById('prop-console').checked;
+
+            let code = `# Configurações de Conexão com o Banco de Dados H2\n`;
+            if (url) {
+                code += `spring.datasource.url=jdbc:h2:mem:testdb\nspring.datasource.driverClassName=org.h2.Driver\nspring.datasource.username=sa\nspring.datasource.password=password\n\n`;
+            }
+            if (ddl) {
+                code += `# Ativa a criação automática/atualização das tabelas\nspring.jpa.hibernate.ddl-auto=update\n\n`;
+            }
+            if (sql) {
+                code += `# Exibe no console os comandos SQL executados\nspring.jpa.show-sql=true\n\n`;
+            }
+            if (consoleEnabled) {
+                code += `# Console Web do Banco H2 no navegador\nspring.h2.console.enabled=true\nspring.h2.console.path=/h2-console\n`;
+                document.getElementById('h2-console-sim').classList.remove('hidden');
+            } else {
+                document.getElementById('h2-console-sim').classList.add('hidden');
+            }
+
+            document.getElementById('code-properties').textContent = code;
+        }
+
+        // --- Section 2: JPA Annotation Inspector ---
+        function inspectAnnotation(type) {
+            const titleEl = document.getElementById('annotation-title');
+            const descEl = document.getElementById('annotation-desc');
+            const ddlEl = document.getElementById('ddl-output');
+
+            const info = {
+                'entity': {
+                    title: '@Entity',
+                    desc: 'Informa ao JPA e ao Hibernate que esta classe Java corresponde a uma Tabela no banco de dados relacional.',
+                    ddl: 'CREATE TABLE tb_produto (...);'
+                },
+                'table': {
+                    title: '@Table(name = "tb_produto")',
+                    desc: 'Define explicitamente o nome da tabela no banco de dados (evita nomear a tabela apenas como "Produto").',
+                    ddl: 'CREATE TABLE tb_produto (...);'
+                },
+                'id': {
+                    title: '@Id',
+                    desc: 'Marca o atributo id como a Chave Primária (Primary Key - PK) da tabela no banco.',
+                    ddl: 'PRIMARY KEY (id)'
+                },
+                'generated': {
+                    title: '@GeneratedValue(strategy = GenerationType.UUID)',
+                    desc: 'Delega ao próprio banco de dados a geração automática e aleatória do identificador UUID ao salvar.',
+                    ddl: 'id UUID NOT NULL'
+                },
+                'col-nome': {
+                    title: '@Column(name = "nm_produto", nullable = false, unique = true, length = 100)',
+                    desc: 'Configura o nome da coluna no banco, proíbe valores nulos (NOT NULL), impede nomes duplicados (UNIQUE) e limita a 100 caracteres.',
+                    ddl: 'nm_produto VARCHAR(100) NOT NULL UNIQUE'
+                },
+                'col-desc': {
+                    title: '@Column(name = "ds_descricao", nullable = false)',
+                    desc: 'Mapeia a coluna da descrição como NOT NULL com tamanho padrão de 255 caracteres.',
+                    ddl: 'ds_descricao VARCHAR(255) NOT NULL'
+                },
+                'constructor': {
+                    title: 'Construtor Vazio sem parâmetros',
+                    desc: 'Exigência técnica OBRIGATÓRIA da especificação JPA para permitir a instanciação dos objetos via Reflection ao ler os dados do banco.',
+                    ddl: '-- Não afeta o DDL SQL diretamente, mas é obrigatório para o Java'
+                }
+            };
+
+            if (info[type]) {
+                titleEl.textContent = info[type].title;
+                descEl.textContent = info[type].desc;
+                ddlEl.textContent = info[type].ddl;
+            }
+        }
+
+        // --- Section 3: JpaRepository Playground ---
+        function playRepoMethod(method) {
+            const codeEl = document.getElementById('repo-method-code');
+            const sqlEl = document.getElementById('repo-method-sql');
+
+            const map = {
+                'save': {
+                    code: 'java: repository.save(produto);',
+                    sql: 'SQL: INSERT INTO tb_produto (nm_produto, ds_descricao, id) VALUES (\'Teclado\', \'Mecânico\', \'550e8400...\');'
+                },
+                'findAll': {
+                    code: 'java: List<Produto> lista = repository.findAll();',
+                    sql: 'SQL: SELECT id, nm_produto, ds_descricao FROM tb_produto;'
+                },
+                'findById': {
+                    code: 'java: Optional<Produto> p = repository.findById(uuid);',
+                    sql: 'SQL: SELECT id, nm_produto, ds_descricao FROM tb_produto WHERE id = \'550e8400...\';'
+                },
+                'deleteById': {
+                    code: 'java: repository.deleteById(uuid);',
+                    sql: 'SQL: DELETE FROM tb_produto WHERE id = \'550e8400...\';'
+                }
+            };
+
+            codeEl.textContent = map[method].code;
+            sqlEl.textContent = map[method].sql;
+        }
+
+        // --- Section 4: Automated Test Runner ---
+        function runAllTests() {
+            const logEl = document.getElementById('test-execution-log');
+            const timerEl = document.getElementById('junit-timer');
+            const passEl = document.getElementById('passed-count');
+            const status1 = document.getElementById('test-status-1');
+            const status2 = document.getElementById('test-status-2');
+
+            logEl.textContent = '[INFO] Inicializando H2 Database para o contexto @DataJpaTest...\n';
+            status1.textContent = 'RODANDO...';
+            status1.className = 'px-2 py-0.5 rounded text-[10px] bg-amber-500 text-slate-950 font-bold';
+            status2.textContent = 'PENDENTE';
+            status2.className = 'px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-600';
+            passEl.textContent = '0';
+
+            setTimeout(() => {
+                logEl.textContent += '[JPA] Executando DDL: CREATE TABLE tb_produto (id UUID NOT NULL, nm_produto VARCHAR(100) NOT NULL UNIQUE...);\n';
+                logEl.textContent += '[TEST 1] deveSalvarProdutoEGerarId() -> Executando repository.save()...\n';
+                logEl.textContent += '[SQL] INSERT INTO tb_produto (nm_produto, ds_descricao, id) VALUES (\'Teclado\', \'Mecânico\', \'a1b2c3...\');\n';
+                logEl.textContent += '[ASSERT] assertNotNull(produto.getId()) -> PASSOU ✅\n';
+                logEl.textContent += '[TRANSACTION] Rollback executado no banco H2 com sucesso.\n\n';
+                
+                status1.textContent = 'PASSOU ✅';
+                status1.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-500 text-white font-bold';
+                passEl.textContent = '1';
+
+                setTimeout(() => {
+                    status2.textContent = 'RODANDO...';
+                    status2.className = 'px-2 py-0.5 rounded text-[10px] bg-amber-500 text-slate-950 font-bold';
+                    logEl.textContent += '[TEST 2] deveLancarExcecaoQuandoNomeDuplicado() -> Salvando produto 1...\n';
+                    logEl.textContent += '[SQL] INSERT INTO tb_produto (nm_produto, ds_descricao, id) VALUES (\'Monitor\', \'Full HD\', \'x1y2z3...\');\n';
+                    logEl.textContent += '[TEST 2] Salvando produto 2 com mesmo nome e executando repository.flush()...\n';
+                    logEl.textContent += '[ERROR] DataIntegrityViolationException: Unique index or primary key violation: "PUBLIC.CONSTRAINT_INDEX_8 ON PUBLIC.TB_PRODUTO(NM_PRODUTO)"\n';
+                    logEl.textContent += '[ASSERT] assertThrows(DataIntegrityViolationException.class) -> PASSOU ✅\n';
+                    logEl.textContent += '[TRANSACTION] Rollback executado no banco H2 com sucesso.\n\n';
+                    logEl.textContent += '---------------------------------------------------\n';
+                    logEl.textContent += 'TEST SUITE COMPLETA: 2 testes executados, 0 falhas.';
+
+                    status2.textContent = 'PASSOU ✅';
+                    status2.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-500 text-white font-bold';
+                    passEl.textContent = '2';
+                    timerEl.textContent = 'Tempo: 248ms';
+                }, 800);
+
+            }, 600);
+        }
+
+        // --- Section 5: Live Data Simulation ---
+        const simulatedDb = [];
+
+        function runDataSimulation(e) {
+            e.preventDefault();
+            const nomeInput = document.getElementById('sim-nome');
+            const descInput = document.getElementById('sim-desc');
+            const feedbackEl = document.getElementById('sim-feedback');
+
+            const nome = nomeInput.value.trim();
+            const desc = descInput.value.trim();
+
+            // Pipeline Step Highlighting
+            const pipeCtrl = document.getElementById('pipe-controller');
+            const pipeCase = document.getElementById('pipe-usecase');
+            const pipeRepo = document.getElementById('pipe-repository');
+            const pipeDb = document.getElementById('pipe-db');
+
+            // Reset Pipe Style
+            [pipeCtrl, pipeCase, pipeRepo, pipeDb].forEach(p => {
+                p.className = 'p-2 rounded bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold animate-pulse';
+            });
+
+            setTimeout(() => {
+                // Check unique constraint violation
+                const exists = simulatedDb.some(item => item.nome.toLowerCase() === nome.toLowerCase());
+
+                [pipeCtrl, pipeCase, pipeRepo, pipeDb].forEach(p => {
+                    p.className = 'p-2 rounded bg-slate-800 border border-slate-700 text-slate-400';
+                });
+
+                if (exists) {
+                    feedbackEl.className = 'p-3 rounded-lg text-xs font-bold bg-rose-900/30 text-rose-400 border border-rose-800 block';
+                    feedbackEl.textContent = `❌ Erro no Banco H2: Violição de @Column(unique=true). Já existe um produto cadastrado com o nome "${nome}".`;
+                } else {
+                    const newId = 'uuid-' + Math.random().toString(36).substr(2, 9);
+                    simulatedDb.push({ id: newId, nome: nome, desc: desc });
+                    
+                    feedbackEl.className = 'p-3 rounded-lg text-xs font-bold bg-emerald-900/30 text-emerald-400 border border-emerald-800 block';
+                    feedbackEl.textContent = `✅ Sucesso! Produto inserido via JpaRepository.save() com ID gerado pelo H2: ${newId}`;
+                    
+                    nomeInput.value = '';
+                    descInput.value = '';
+                    renderSimulatedTable();
+                }
+            }, 600);
+        }
+
+        function renderSimulatedTable() {
+            const tbody = document.getElementById('sim-db-rows');
+            const countEl = document.getElementById('db-count');
+            countEl.textContent = `${simulatedDb.length} registro(s)`;
+
+            if (simulatedDb.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="p-4 text-center text-slate-500 italic">
+                            Nenhum registro no banco em memória. Cadastre um produto ao lado!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = simulatedDb.map(row => `
+                <tr class="hover:bg-slate-800/50">
+                    <td class="p-2.5 border-b border-slate-800 font-mono text-amber-400 text-[11px]">${row.id}</td>
+                    <td class="p-2.5 border-b border-slate-800 font-bold text-slate-200">${row.nome}</td>
+                    <td class="p-2.5 border-b border-slate-800 text-slate-400">${row.desc}</td>
+                </tr>
+            `).join('');
+        }
+
+        // --- Section 6: Checklist Progress ---
+        function calcProgress() {
+            const checkboxes = document.querySelectorAll('.chk-item');
+            let checked = 0;
+            checkboxes.forEach(chk => {
+                if (chk.checked) checked++;
+            });
+            const pct = Math.round((checked / checkboxes.length) * 100);
+            const progressEl = document.getElementById('checklist-progress');
+            progressEl.textContent = `${pct}% Concluído`;
+
+            if (pct === 100) {
+                progressEl.className = 'text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200';
+            } else {
+                progressEl.className = 'text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200';
+            }
+        }
+
+        // --- Initialize Chart.js & Defaults ---
+        window.addEventListener('DOMContentLoaded', () => {
+            updatePropertiesView();
+            inspectAnnotation('entity');
+
+            // Chart.js Boilerplate Metric
+            const ctx = document.getElementById('codeReductionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['ArrayList Manual', 'Spring Data JPA'],
+                    datasets: [{
+                        label: 'Linhas de Código de Repositório',
+                        data: [120, 15],
+                        backgroundColor: [
+                            'rgba(148, 163, 184, 0.7)',
+                            'rgba(245, 158, 11, 0.9)'
+                        ],
+                        borderColor: [
+                            'rgba(100, 116, 139, 1)',
+                            'rgba(217, 119, 6, 1)'
+                        ],
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.raw} linhas de código aproximadas`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Linhas de Código',
+                                font: { size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    <!-- Visualization & Content Choices: 
+    1. Interactive application.properties Configurator -> Live text rendering of configuration lines and toggleable H2 console panel.
+    2. Interactive JPA Mapping Inspector -> Code snippet click events trigger DDL translation cards.
+    3. Code Reduction Metric -> Chart.js horizontal/vertical bar chart contrasting manual ArrayList repositories vs JpaRepository interfaces.
+    4. Test Suite Execution Simulator -> Interactive JUnit execution log simulating real automated test runs with transaction rollback log.
+    5. Live Architecture Pipeline Simulator -> Interactive HTML form allowing users to submit products and watch them pass through layers into a live simulated H2 database table with unique constraint checking.
+    Confirming NO SVG graphics used and NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</body>
+</html>

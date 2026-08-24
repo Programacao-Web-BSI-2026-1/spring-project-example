@@ -19,8 +19,7 @@ public class ProdutoUserCase {
     }
 
     public void criarProduto(ProdutoRequest produto) {
-        UUID id = UUID.randomUUID();
-        Produto novoProduto = new Produto(id, produto.getNome(), produto.getDescricao());
+        Produto novoProduto = new Produto(produto.getNome(), produto.getDescricao());
         this.produtoRepositorio.save(novoProduto);
     } 
 
