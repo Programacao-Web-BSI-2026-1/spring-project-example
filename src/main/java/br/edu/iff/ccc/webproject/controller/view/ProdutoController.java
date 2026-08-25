@@ -25,7 +25,7 @@ public class ProdutoController {
     @GetMapping("/novo")
     public String novoProduto(Model model) {
         ProdutoRequest novoProduto = new ProdutoRequest();
-        // A chave "produto" é o que usaremos no th:object do Thymeleaf
+        // A chave "produtoRequest" é o que usaremos no th:object do Thymeleaf
         model.addAttribute("produtoRequest", novoProduto); 
         return "produtoForm"; // Retorna templates/produtoForm.html
     }
