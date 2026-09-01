@@ -36,9 +36,11 @@ public class ProdutoUserCase {
         // Lógica para deletar um produto
     }
 
-    public void buscarProduto() {
+    public Produto buscarProduto(UUID id) {
         // Lógica para buscar um produto
-        throw new RecursoNaoEncontradoException("O usuário com ID 15 não foi encontrado no banco de dados.");
+        return this.produtoRepositorio.findById(id)
+            .orElseThrow(() -> new RecursoNaoEncontradoException("O produto com ID " + id + " não foi encontrado no banco de dados."));
+    
     }
 
     public void validarProduto() {

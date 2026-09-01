@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +34,7 @@ public class ProdutoRestController {
         @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos no corpo da requisição")
     })
     @PostMapping
-    public ResponseEntity<Void> criarProduto(@RequestBody ProdutoRequest produtoRequest) {
+    public ResponseEntity<Void> criarProduto(@Valid @RequestBody ProdutoRequest produtoRequest) {
         produtoUserCase.criarProduto(produtoRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -51,11 +53,11 @@ public class ProdutoRestController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado (Retorna formato RFC 7807)")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Void> buscarProduto(
+    public ResponseEntity<Produto> buscarProduto(
             @Parameter(description = "UUID válido do produto", example = "d9b2d63d-a233-4123-8478-316827052594") 
             @PathVariable UUID id) {
-        produtoUserCase.buscarProduto(); 
-        return ResponseEntity.ok().build();
+        Produto produto = produtoUserCase.buscarProduto(id); 
+        return ResponseEntity.ok(produto);
     }
 
     @Operation(summary = "Atualizar um produto", description = "Modifica os dados de um produto existente baseado no seu UUID.")
@@ -67,7 +69,7 @@ public class ProdutoRestController {
     @PutMapping("/{id}")
     public ResponseEntity<Void> atualizarProduto(
             @Parameter(description = "UUID válido do produto") @PathVariable UUID id, 
-            @RequestBody ProdutoRequest produtoRequest) {
+            @Valid @RequestBody ProdutoRequest produtoRequest) {
         produtoUserCase.atualizarProduto();
         return ResponseEntity.noContent().build();
     }
