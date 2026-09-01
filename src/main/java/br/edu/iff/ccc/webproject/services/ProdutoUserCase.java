@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import br.edu.iff.ccc.webproject.dto.ProdutoRequest;
 import br.edu.iff.ccc.webproject.entities.Produto;
+import br.edu.iff.ccc.webproject.exception.RecursoNaoEncontradoException;
 import br.edu.iff.ccc.webproject.repository.ProdutoRepositorio;
 
 @Service
@@ -37,6 +38,7 @@ public class ProdutoUserCase {
 
     public void buscarProduto() {
         // Lógica para buscar um produto
+        throw new RecursoNaoEncontradoException("O usuário com ID 15 não foi encontrado no banco de dados.");
     }
 
     public void validarProduto() {
